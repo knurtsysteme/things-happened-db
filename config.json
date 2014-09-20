@@ -1,0 +1,21 @@
+{
+  "server": {
+    "host": "localhost",
+    "port": 3000,
+    "wsport" : 1337
+  },
+  "db": {
+    "name": "things-happened"
+  },
+  "app": {
+    "logger" : {
+      "files" : {
+        "main" : "log/main.log",
+        "error" : "log/error.log"
+      }
+    },
+    "restrictions": {
+      "allowedKeySize": 20
+    }
+  }
+}

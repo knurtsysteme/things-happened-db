@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="things-happened-db">
+
+	<property file="build-my.properties" />
+
+	<!-- this file is only for properties and imports -->
+	<target name="node app.js" description="start the db app">
+		<exec executable="node">
+			<arg line="app.js" />
+		</exec>
+	</target>
+
+	<target name="cat error.log" description="view all logged errors">
+		<exec executable="cat">
+			<arg line="log/error.log" />
+		</exec>
+	</target>
+
+  <target name="cat main.log" description="view all logged infos">
+    <exec executable="cat">
+      <arg line="log/main.log" />
+    </exec>
+  </target>
+
+  <target name="rm main.log" description="view all logged infos">
+    <exec executable="rm">
+      <arg line="log/main.log" />
+    </exec>
+    <exec executable="touch">
+      <arg line="log/main.log" />
+    </exec>
+  </target>
+
+  <target name="rm error.log" description="view all logged infos">
+    <exec executable="rm">
+      <arg line="log/error.log" />
+    </exec>
+    <exec executable="touch">
+      <arg line="log/error.log" />
+    </exec>
+  </target>
+
+  <target name="test all vows" description="run all unit tests">
+    <apply executable="${basedir}/node_modules/vows/bin/vows">
+    	<arg value="--spec"/>
+      <fileset dir="./test" includes="things-*.js" />
+    </apply>
+	</target>
+	
+	<target name="test all" depends="test all vows" description="run all unit tests">
+		<echo>Hint: On a newly created database you have to run all tests a second time</echo> 
+    <!-- TODO migrate all nodeunit tests to vows -->
+		<apply executable="nodeunit">
+			<fileset dir="./test" includes="test-*.js" />
+		</apply>
+	</target>
+	
+</project>
