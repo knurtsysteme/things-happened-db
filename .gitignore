@@ -15,3 +15,5 @@ nb-configuration.xml
 profiles.xml
 C:*
 node_modules/
+my_**
+**/my_**

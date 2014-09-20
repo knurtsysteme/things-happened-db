@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="things-happened-db">
 
-	<property file="build-my.properties" />
-
 	<!-- this file is only for properties and imports -->
 	<target name="node app.js" description="start the db app">
 		<exec executable="node">
