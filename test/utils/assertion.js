@@ -20,7 +20,7 @@ exports.isEmptyArray = function(test) {
 };
 
 exports.keysValues = function(test, assertionObject) {
-  return function(err, result) {
+  return function(err, result) {    
     var keysRes = Object.keys(result);
     var keysAss = Object.keys(assertionObject);
     test.expect(keysAss.length * 2);

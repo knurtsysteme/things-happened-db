@@ -28,6 +28,9 @@ helper.subject = function(subject) {
           }
           return result;
         },
+        isNull : function() {
+          return subject[key] == null
+        },
         /**
          * return true, if the key equals the given value.
          */
@@ -81,6 +84,12 @@ assertResponse.json.key = function(key) {
       assert.isTrue(helper.subject(json).key(key).exists());
     };
   };
+  result.isNull = function() {
+    return function(response) {
+      var json = JSON.parse(response.body);
+      assert.isTrue(helper.subject(json).key(key).isNull());
+    }
+  },
   result.hasValue = function(value) {
     return function(response) {
       var json = JSON.parse(response.body);

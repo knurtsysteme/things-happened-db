@@ -229,68 +229,120 @@ exports.CWBDao = function(db, appConf) {
       callbackError(vm1 + ',' + vm2, 1403132052, callback);
     }
   };
+  
 
-  var internInsert = function(cn, state, entry, callback) {
-    var result = entry;
-    result._host = appConf.server.host;
-    result._version = require(__dirname + "/../package.json").version;
-    result._cn = cn;
-    result._rid = entry._rid ? entry._rid : false;
-    result._pid = entry._id ? entry._id : null;
-    delete entry._id;
-    result._state = state;
-    result._date = heinzelmann.util('common-date-format').getRow();
-    result._plausibility = 0; // TODO implement it! 100 means: looks like good
-    // data (matching attrs and values of other cns).
-    // 0 means spam.
-    result._reviewed = false; // TODO implement it! true means: a human verified
-    // it
-    result._deleted = false; // TODO implement it! true means: a human
-    result._secret = entry._secret ? entry._secret : null;
+  /**
+   * insert given entry with given state in given cn and invoke callback.
+   * before entry is inserted, check existing thing that seems to be updated. 
+   */
+  var internInsert = function(cn, state, entry, callback, valid) {
+    var convertToNewlyInsertedThing = function() {
+      var keys = Object.keys(entry);
+      var i = keys.length;
+      while(i--) {
+        if(keys[i].match(/^_/) && keys[i] != '_secret') {
+          delete entry[keys[i]];
+        }
+      }
+    }
+    var entryIsUpdateOfExisting = function() {
+      var keys = Object.keys(entry);
+      var i = keys.length;
+      var result = false;
+      while(i--) {
+        if(keys[i].match(/^_/) && keys[i] != '_secret') {
+          result = true;
+          break;
+        }
+      }
+      return result;
+    }
+    valid = valid || cn == 'dependencies' || false;
+    if (!valid) {
+      // validate entry before inserting
+      if(entryIsUpdateOfExisting()) {
+        // seems to be an update of things state
+        db.collection(cn, function(err, collection) {
+          collection.find({
+            _id : new ObjectID(entry._id + '')
+          }).toArray(function(err, existingThings) {
+            var exists = existingThings && existingThings.length === 1;
+            if(exists) {
+              var existingThing = existingThings[0];
+              // thing with id already exist: set root id of existing
+              entry._rid = existingThing._rid;
+            } else {
+              convertToNewlyInsertedThing();
+            }
+            internInsert(cn, state, entry, callback, true);
+          });
+        });
+      } else {
+        internInsert(cn, state, entry, callback, true);
+      }
+    } else {
+      var result = entry;
+      result._host = appConf.server.host;
+      result._version = require(__dirname + "/../package.json").version;
+      result._cn = cn;
+      result._rid = entry._rid ? entry._rid : false;
+      result._pid = entry._id ? entry._id : null;
+      delete entry._id;
+      result._state = state;
+      result._date = heinzelmann.util('common-date-format').getRow();
+      result._plausibility = 0; // TODO implement it! 100 means: looks like good
+      // data (matching attrs and values of other cns).
+      // 0 means spam.
+      result._reviewed = false; // TODO implement it! true means: a human
+                                // verified
+      // it
+      result._deleted = false; // TODO implement it! true means: a human
+      result._secret = entry._secret ? entry._secret : null;
 
-    // resend _rid and _pid are shipped as string
-    // create ObjectId from it ...
-    result = getStringIdsAsObjectIds(result);
+      // resend _rid and _pid are shipped as string
+      // create ObjectId from it ...
+      result = getStringIdsAsObjectIds(result);
 
-    if (result) { // ... what may fail
-      // verification says deleted
-      // it and it is a breach of a rule of our terms
-      // insert result
-      db.collection(cn, function(err, collection) {
-        collection.find({
-          _id : result._pid
-        }).toArray(function(err, parents) {
-          db.collection(cn, function(err, collection2) {
-            collection2.count({
-              _pid : result._pid
-            }, function(err, count) {
-              if (parents && parents.length == 1) {
-                result._branch = parents[0]._branch ? parents[0]._branch + ',' + count : count;
-              } else {
-                result._branch = '0';
-              }
-              collection.insert(result, function() {
-                if (result._rid) {
-                  callback(err, result);
+      if (result) { // ... what may fail
+        // verification says deleted
+        // it and it is a breach of a rule of our terms
+        // insert result
+        db.collection(cn, function(err, collection) {
+          collection.find({
+            _id : result._pid
+          }).toArray(function(err, parents) {
+            db.collection(cn, function(err, collection2) {
+              collection2.count({
+                _pid : result._pid
+              }, function(err, count) {
+                if (parents && parents.length == 1) {
+                  result._branch = parents[0]._branch ? parents[0]._branch + ',' + count : count;
                 } else {
-                  // newly inserted root elements do not have a _rid.
-                  // set inserted id as _rid here and then call callback.
-                  result._rid = result._id;
-                  collection.update({
-                    _id : result._id
-                  }, result, {
-                    upsert : false
-                  }, function() {
-                    callback(err, result);
-                  });
+                  result._branch = '0';
                 }
+                collection.insert(result, function() {
+                  if (result._rid) {
+                    callback(err, result);
+                  } else {
+                    // newly inserted root elements do not have a _rid.
+                    // set inserted id as _rid here and then call callback.
+                    result._rid = result._id;
+                    collection.update({
+                      _id : result._id
+                    }, result, {
+                      upsert : false
+                    }, function() {
+                      callback(err, result);
+                    });
+                  }
+                });
               });
             });
           });
         });
-      });
-    } else {
-      callbackError('invalid params', 1409061916, callback);
+      } else {
+        callbackError('invalid params', 1409061916, callback);
+      }
     }
   };
   /**

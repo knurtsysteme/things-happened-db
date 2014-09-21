@@ -69,6 +69,16 @@ topics.insertABookWritten2ReadAndSecondCommented = function(callback) {
     tools.postRequest('addto/books/commented.json', book2, callback);
   });
 };
+topics.insertBooksReturnTree = function(callback) {
+  var self = this;
+  callback = callback || self.callback;
+  topics.insertABookWritten2ReadAndSecondCommented(function(err, response) {
+    var book = JSON.parse(response.body);
+    tools.getRequest('get/books.json', callback, {
+      _rid : book._rid
+    });
+  });
+};
 
 vows.describe('Every thing have a field _branch').addBatch({
   'when posting a new book written' : {
@@ -97,7 +107,49 @@ vows.describe('Every thing have a field _branch').addBatch({
     topic : topics.insertABookWritten2ReadAndSecondCommented,
     'the book should' : {
       'have the field _branch' : specs.assertResponse.json.key('_branch').exists(),
-      'have _branch == 0,1,0' : specs.assertResponse.json.key('_branch').hasValue('0,1,0')
+      'have _branch == 0,1,0' : specs.assertResponse.json.key('_branch').hasValue('0,1,0'),
+    }
+  },
+  'after all a book-tree' : {
+    topic : topics.insertBooksReturnTree,
+    'still have a root with null _pid and _branch "0"' : function(err, response) {
+      var books = JSON.parse(response.body);
+      assert.isTrue(books.length > 0);
+      var i = books.length;
+      var foundRootTree = false;
+      while (i--) {
+        if (books[i]._pid == null && books[i]._branch == '0') {
+          foundRootTree = true;
+          break;
+        }
+      }
+      assert.isTrue(foundRootTree);
+    },
+    'have the right pids and rids' : function(err, response) {
+      var books = JSON.parse(response.body);
+      var idLevel1, pidLevel2a, pidLevel2b, idLevel2, pidLevel3;
+      var i = books.length;
+      while (i--) {
+        if (books[i]._branch == '0') {
+          idLevel1 == books[i]._id;
+        } else if(books[i]._branch == '0,1') {
+          pidLevel2a == books[i]._pid;
+          idLevel2 == books[i]._id;
+        } else if(books[i]._branch == '0,0') {
+          pidLevel2b == books[i]._pid;
+        } else if(books[i]._branch == '0,1,0') {
+          pidLevel3 == books[i]._pid;
+        }
+      }
+      assert.isNotNull(idLevel1);
+      assert.isNotNull(pidLevel2a);
+      assert.isNotNull(pidLevel2b);
+      assert.isNotNull(idLevel2);
+      assert.isNotNull(pidLevel3);
+      assert.equal(pidLevel2a, pidLevel2b);
+      assert.equal(pidLevel2a, idLevel1);
+      assert.equal(pidLevel2b, idLevel1);
+      assert.equal(pidLevel3, idLevel2);
     }
   }
 }).exportTo(module); // Run it
