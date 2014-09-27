@@ -79,8 +79,8 @@ exports.CWBDao = function(db, appConf) {
   this.getEntries = function(collectionName, callback, criteria, projection) {
     var filteredCallback = function(err, results) {
       results.forEach(function(result) {
-        if (result._secret)
-          delete result._secret;
+        delete result._secret;
+        delete result._deleted;
       });
       callback(err, results);
     }
@@ -90,6 +90,7 @@ exports.CWBDao = function(db, appConf) {
       if (typeof projection == 'string') {
         projection = JSON.parse(projection);
       }
+      criteria._deleted = false;
       db.collection(collectionName).find(criteria, projection).toArray(filteredCallback);
     } else {
       callbackError('invalid criteria', 1403261021, callback);
@@ -322,6 +323,8 @@ exports.CWBDao = function(db, appConf) {
                 }
                 collection.insert(result, function() {
                   if (result._rid) {
+                    delete result._secret;
+                    delete result._deleted;
                     callback(err, result);
                   } else {
                     // newly inserted root elements do not have a _rid.
@@ -332,6 +335,8 @@ exports.CWBDao = function(db, appConf) {
                     }, result, {
                       upsert : false
                     }, function() {
+                      delete result._secret;
+                      delete result._deleted;
                       callback(err, result);
                     });
                   }

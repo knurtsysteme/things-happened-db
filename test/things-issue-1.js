@@ -18,7 +18,6 @@ var mockThing = {
   _date : '20110920182821',
   _plausibility : 0,
   _reviewed : false,
-  _deleted : false,
   _branch : '0,2',
   _id : '541dab255f93796c746c8785'
 };

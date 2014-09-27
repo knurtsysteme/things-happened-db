@@ -23,9 +23,8 @@ var defaultResponse = function(request, error, result, response, callback) {
   if (typeof result == 'object') {
     result._ok = result._err ? (result._ok < 0 ? result._ok : -1207171113) : 1;
   }
-  if (result._secret) {
-    delete result._secret;
-  }
+  delete result._secret;
+  delete result._deleted;
   heinzelmann.util('http-response', response).json(result);
   if (typeof callback == 'function') {
     callback(result);
