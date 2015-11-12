@@ -230,18 +230,17 @@ exports.CWBDao = function(db, appConf) {
       callbackError(vm1 + ',' + vm2, 1403132052, callback);
     }
   };
-  
 
   /**
-   * insert given entry with given state in given cn and invoke callback.
-   * before entry is inserted, check existing thing that seems to be updated. 
+   * insert given entry with given state in given cn and invoke callback. before
+   * entry is inserted, check existing thing that seems to be updated.
    */
   var internInsert = function(cn, state, entry, callback, valid) {
     var convertToNewlyInsertedThing = function() {
       var keys = Object.keys(entry);
       var i = keys.length;
-      while(i--) {
-        if(keys[i].match(/^_/) && keys[i] != '_secret') {
+      while (i--) {
+        if (keys[i].match(/^_/) && keys[i] != '_secret') {
           delete entry[keys[i]];
         }
       }
@@ -250,8 +249,8 @@ exports.CWBDao = function(db, appConf) {
       var keys = Object.keys(entry);
       var i = keys.length;
       var result = false;
-      while(i--) {
-        if(keys[i].match(/^_/) && keys[i] != '_secret') {
+      while (i--) {
+        if (keys[i].match(/^_/) && keys[i] != '_secret') {
           result = true;
           break;
         }
@@ -261,14 +260,14 @@ exports.CWBDao = function(db, appConf) {
     valid = valid || cn == 'dependencies' || false;
     if (!valid) {
       // validate entry before inserting
-      if(entryIsUpdateOfExisting()) {
+      if (entryIsUpdateOfExisting()) {
         // seems to be an update of things state
         db.collection(cn, function(err, collection) {
           collection.find({
             _id : new ObjectID(entry._id + '')
           }).toArray(function(err, existingThings) {
             var exists = existingThings && existingThings.length === 1;
-            if(exists) {
+            if (exists) {
               var existingThing = existingThings[0];
               // thing with id already exist: set root id of existing
               entry._rid = existingThing._rid;
@@ -295,7 +294,7 @@ exports.CWBDao = function(db, appConf) {
       // data (matching attrs and values of other cns).
       // 0 means spam.
       result._reviewed = false; // TODO implement it! true means: a human
-                                // verified
+      // verified
       // it
       result._deleted = false; // TODO implement it! true means: a human
       result._secret = entry._secret ? entry._secret : null;

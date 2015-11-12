@@ -21,6 +21,7 @@ app.configure(function() {
   app.use(allowCrossDomain);
   app.use(app.router);
   app.use(express.static(__dirname + '/public'));
+
   // Handle 404
   app.use(function(req, response) {
     response.charset = 'UTF-8';

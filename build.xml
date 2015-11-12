@@ -39,7 +39,7 @@
   </target>
 
   <target name="test all vows" description="run all unit tests">
-    <apply executable="${basedir}/node_modules/vows/bin/vows">
+    <apply executable="${basedir}/node_modules/vows/bin/vows" failonerror="true">
     	<arg value="--spec"/>
       <fileset dir="./test" includes="things-*.js" />
     </apply>
@@ -48,7 +48,7 @@
 	<target name="test all" depends="test all vows" description="run all unit tests">
 		<echo>Hint: On a newly created database you have to run all tests a second time</echo> 
     <!-- TODO migrate all nodeunit tests to vows -->
-		<apply executable="nodeunit">
+		<apply executable="nodeunit" failonerror="true">
 			<fileset dir="./test" includes="test-*.js" />
 		</apply>
 	</target>
