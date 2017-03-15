@@ -1,0 +1,16 @@
+version: '2'
+services:
+  things-happened-mongo:
+    container_name: things-happened-mongo
+    image: mongo:3.2.4
+    expose:
+      - "27017"
+  things-happened-db:
+    container_name: things-happened-db
+    build:
+      context: ./things-happened-db/.
+    ports:
+      - "3001:3001"
+      # - "1337:1337"
+    links:
+      - things-happened-mongo:things-happened-mongo
